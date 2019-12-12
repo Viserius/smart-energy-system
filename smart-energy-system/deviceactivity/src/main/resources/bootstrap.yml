@@ -1,0 +1,26 @@
+spring:
+  application:
+    name: deviceactivity
+  cloud:
+    config:
+      enabled: false
+  rabbitmq:
+    host: ${RABBITMQ_SEED:rabbitmq}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.uuid}}
+    hostname: ${POD_SERVICE:${HOSTNAME:localhost}}
+server:
+  port: 8999
+jsa:
+  rabbitmq:
+    queue_energy_activity: 'energy_activity'
+    exchange_single: 'device_history'
+    exchange_fanout: 'device_history_fanout'
+logging.level.root: warn
+services.gateway.householdurl: ${HOUSEHOLD_API_URL:http://gatewayx/api/households}

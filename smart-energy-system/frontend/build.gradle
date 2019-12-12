@@ -1,0 +1,96 @@
+buildscript {
+    ext {
+        springBootVersion = '2.1.8.RELEASE'
+        springCloudVersion = 'Greenwich.SR3'
+    }
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath('gradle.plugin.com.palantir.gradle.docker:gradle-docker:0.13.0')
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+// tag::plugin[]
+apply plugin: 'com.palantir.docker'
+// end::plugin[]
+
+// This is used as the docker image prefix (org)
+group = 'org.rug.wacc-2019-smart-energy'
+
+bootJar {
+    baseName = 'frontend'
+    version = '0.0.1-SNAPSHOT'
+}
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+configurations {
+    developmentOnly
+    runtimeClasspath {
+        extendsFrom developmentOnly
+    }
+    compileOnly {
+        extendsFrom annotationProcessor
+    }
+}
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+    compileOnly 'org.projectlombok:lombok'
+    developmentOnly 'org.springframework.boot:spring-boot-devtools'
+    annotationProcessor 'org.springframework.boot:spring-boot-configuration-processor'
+    annotationProcessor 'org.projectlombok:lombok'
+}
+
+// tag::task[]
+task unpack(type: Copy) {
+    dependsOn bootJar
+    from(zipTree(tasks.bootJar.outputs.files.singleFile))
+    into("build/dependency")
+}
+docker {
+    name "${project.group}/${bootJar.baseName}"
+    copySpec.from(tasks.unpack.outputs).into("dependency")
+    buildArgs(['DEPENDENCY': "dependency"])
+}
+// end::task[]
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+eclipse {
+    classpath {
+        containers.remove('org.eclipse.jdt.launching.JRE_CONTAINER')
+        containers 'org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8'
+    }
+}
+
+task npmInstall(type: Exec) {
+    workingDir 'src/main/resources'
+    commandLine "npm", "install"
+}
+
+task npmBuild(type: Exec) {
+    workingDir 'src/main/resources'
+    commandLine "npm", "run", "build"
+}

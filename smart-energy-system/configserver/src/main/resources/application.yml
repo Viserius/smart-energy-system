@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: configserver
+  cloud:
+    config:
+      server:
+        native:
+          search-locations: classpath:/sharedconfig
+  profiles:
+    active: native
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.uuid}}
+    hostname: ${POD_SERVICE:${HOSTNAME:localhost}}
+server:
+  port: 8081

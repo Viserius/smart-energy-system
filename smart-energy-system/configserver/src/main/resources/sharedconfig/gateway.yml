@@ -1,0 +1,19 @@
+spring:
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: powerinfrastructureservice
+          uri: lb://powerinfrastructureservice
+          predicates:
+            - Path=/api/**
+          filters:
+            - RewritePath=/api/(?<path>.*),/$\{path}
+        - id: frontend
+          uri: lb://frontend
+          predicates:
+            - Path=/**
+          filters:
+            - RewritePath=/(?<path>.*),/$\{path}

@@ -1,0 +1,8 @@
+rootProject.name = 'smart-energy-system'
+
+include 'frontend'
+include 'servicediscovery'
+include 'configserver'
+include 'gateway'
+include 'powerinfrastructureservice'
+include 'deviceactivity'

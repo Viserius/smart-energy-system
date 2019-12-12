@@ -1,0 +1,81 @@
+version: "2"
+services:
+
+  # --- SERVICE DISCOVERY
+  servicediscovery:
+    image: org.rug.wacc-2019-smart-energy/servicediscovery:latest
+    environment:
+      - "MULTIPLE_EUREKA_INSTANCES=false"
+    ports:
+      - "8761:8761"
+    mem_limit: 300M
+  # --- END SERVICE DISCOVERY
+
+  # --- CONFIG SERVER
+  configserver:
+    image: org.rug.wacc-2019-smart-energy/configserver:latest
+    environment:
+      - "EUREKA_URI=http://servicediscovery:8761/eureka"
+    ports:
+      - "8081:8081" # Not required, just for diagnostics
+    mem_limit: 300M
+    depends_on:
+      - servicediscovery
+  # --- END CONFIG SERVER
+
+  # --- GATEWAY
+  gateway:
+    image: org.rug.wacc-2019-smart-energy/gateway:latest
+    environment:
+      - "EUREKA_URI=http://servicediscovery:8761/eureka"
+    ports:
+      - "80:80"
+    mem_limit: 300M
+    depends_on:
+      - servicediscovery
+      - configserver
+  # --- END GATEWAY
+
+  # --- FRONTEND
+  frontend:
+    image: org.rug.wacc-2019-smart-energy/frontend:latest
+    environment:
+      - "EUREKA_URI=http://servicediscovery:8761/eureka"
+    ports:
+      - "8082:8082" # Not required, just for diagnostics
+    depends_on:
+      - servicediscovery
+    mem_limit: 300M
+  # --- END FRONTEND
+
+  # --- Power Infrastructure Service
+  powerinfrastructureservice:
+    image: org.rug.wacc-2019-smart-energy/powerinfrastructureservice:latest
+    environment:
+      - "EUREKA_URI=http://servicediscovery:8761/eureka"
+      - "CASSANDRA_SEEDS=35.224.59.141"
+      - "MONGO_URI=mongodb://35.226.101.160:27017/ses"
+    ports:
+      - "8083:8083" # Not required, just for diagnostics
+    mem_limit: 300M
+    depends_on:
+      - servicediscovery
+    restart: on-failure
+  # --- END Power Infrastructure Service
+
+  deviceactivity:
+    image: org.rug.wacc-2019-smart-energy/deviceactivity:latest
+    ports:
+      - "8999:8999"
+    environment:
+      - "EUREKA_URI=http://servicediscovery:8761/eureka"
+    depends_on:
+      - servicediscovery
+
+  # --- RABBITMQ
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+  # --- END RABBITMQ

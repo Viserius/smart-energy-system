@@ -1,0 +1,79 @@
+buildscript {
+	ext {
+		springBootVersion = '2.1.8.RELEASE'
+		springCloudVersion = 'Greenwich.SR3'
+	}
+	repositories {
+		maven {
+			url "https://plugins.gradle.org/m2/"
+		}
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+		classpath('gradle.plugin.com.palantir.gradle.docker:gradle-docker:0.13.0')
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'com.palantir.docker'
+
+bootJar {
+	baseName = 'deviceactivity'
+	version =  '0.1.0'
+}
+
+repositories {
+	mavenCentral()
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+group = 'org.rug.wacc-2019-smart-energy'
+version = '0.0.1-SNAPSHOT'
+
+configurations {
+	developmentOnly
+	runtimeClasspath {
+		extendsFrom developmentOnly
+	}
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+//ext {
+//	set('springCloudVersion', "Greenwich.SR3")
+//}
+
+dependencies {
+	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-client'
+	implementation 'org.springframework.boot:spring-boot-starter-amqp'
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.cloud:spring-cloud-starter-config'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+// tag::task[]
+task unpack(type: Copy) {
+	dependsOn bootJar
+	from(zipTree(tasks.bootJar.outputs.files.singleFile))
+	into("build/dependency")
+}
+docker {
+	name "${project.group}/${bootJar.baseName}"
+	copySpec.from(tasks.unpack.outputs).into("dependency")
+	buildArgs(['DEPENDENCY': "dependency"])
+}
+// end::task[]
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
+}

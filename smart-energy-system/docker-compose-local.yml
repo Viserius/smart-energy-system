@@ -1,0 +1,170 @@
+version: "2"
+services:
+
+  # --- SERVICE DISCOVERY
+  servicediscovery:
+    image: org.rug.wacc-2019-smart-energy/servicediscovery:latest
+    environment:
+      - "MULTIPLE_EUREKA_INSTANCES=false"
+    ports:
+      - "8761:8761"
+    mem_limit: 300M
+  # --- END SERVICE DISCOVERY
+
+  # --- CONFIG SERVER
+  configserver:
+    image: org.rug.wacc-2019-smart-energy/configserver:latest
+    environment:
+      - "EUREKA_URI=http://servicediscovery:8761/eureka"
+    ports:
+      - "8081:8081" # Not required, just for diagnostics
+    mem_limit: 300M
+    depends_on:
+      - servicediscovery
+  # --- END CONFIG SERVER
+
+  # --- GATEWAY
+  gateway:
+    image: org.rug.wacc-2019-smart-energy/gateway:latest
+    environment:
+      - "EUREKA_URI=http://servicediscovery:8761/eureka"
+    ports:
+      - "80:80"
+    mem_limit: 300M
+    depends_on:
+      - servicediscovery
+      - configserver
+  # --- END GATEWAY
+
+  # --- FRONTEND
+  frontend:
+    image: org.rug.wacc-2019-smart-energy/frontend:latest
+    environment:
+      - "EUREKA_URI=http://servicediscovery:8761/eureka"
+    ports:
+      - "8082:8082" # Not required, just for diagnostics
+    depends_on:
+      - servicediscovery
+    mem_limit: 300M
+  # --- END FRONTEND
+
+  # --- Power Infrastructure Service
+  powerinfrastructureservice:
+    image: org.rug.wacc-2019-smart-energy/powerinfrastructureservice:latest
+    environment:
+      - "EUREKA_URI=http://servicediscovery:8761/eureka"
+      - "CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3"
+      - "MONGO_URI=mongodb://mongo1:27017,mongo2:27017,mongo3:27017/ses?replicaSet=rs0"
+    ports:
+      - "8083:8083" # Not required, just for diagnostics
+    mem_limit: 300M
+    depends_on:
+      - servicediscovery
+      - cassandra1
+      - cassandra2
+      - cassandra3
+      - mongo1
+      - mongo2
+      - mongo3
+    restart: on-failure
+  # --- END Power Infrastructure Service
+
+  deviceactivity:
+    image: org.rug.wacc-2019-smart-energy/deviceactivity:latest
+    ports:
+      - "8999:8999"
+    environment:
+      - "EUREKA_URI=http://servicediscovery:8761/eureka"
+    depends_on:
+      - servicediscovery
+      - rabbitmq
+
+  # --- RABBITMQ
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+  # --- END RABBITMQ
+
+  # --- CASSANDRA CLUSTER
+  cassandra1:
+    image: cassandra:latest
+    ports:
+      - "9042:9042"
+    volumes:
+      - "./cassandra-cluster/cassandra-data-1:/var/lib/cassandra"
+    environment:
+      - "CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3"
+      - "HEAP_NEWSIZE=1M"
+      - "MAX_HEAP_SIZE=512M"
+    mem_limit: 1024M
+
+  cassandra2:
+    image: cassandra:latest
+    ports:
+      - "9043:9042"
+    volumes:
+      - "./cassandra-cluster/cassandra-data-2:/var/lib/cassandra"
+    environment:
+      - "CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3"
+      - "HEAP_NEWSIZE=1M"
+      - "MAX_HEAP_SIZE=512M"
+    mem_limit: 1024M
+
+  cassandra3:
+    image: cassandra:latest
+    ports:
+      - "9044:9042"
+    volumes:
+      - "./cassandra-cluster/cassandra-data-3:/var/lib/cassandra"
+    environment:
+      - "CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3"
+      - "HEAP_NEWSIZE=1M"
+      - "MAX_HEAP_SIZE=512M"
+    mem_limit: 1024M
+  # --- END CASSANDRA CLUSTER
+
+  # MONGODB CLUSTER
+  mongo1:
+    image: mongo:4.0-xenial
+    ports:
+      - "27017:27017"
+    volumes:
+      - "mongodata:/data/db"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongo
+      - MONGO_INITDB_ROOT_PASSWORD=mongo
+      - MONGO_INITDB_DATABASE=ses
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "rs0" ]
+    mem_limit: 512M
+  mongo2:
+    image: mongo:4.0-xenial
+    ports:
+      - "27018:27017"
+    volumes:
+      - "mongodata2:/data/db"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongo
+      - MONGO_INITDB_ROOT_PASSWORD=mongo
+      - MONGO_INITDB_DATABASE=ses
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "rs0" ]
+    mem_limit: 512M
+  mongo3:
+    image: mongo:4.0-xenial
+    ports:
+      - "27019:27017"
+    volumes:
+      - "mongodata3:/data/db"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=mongo
+      - MONGO_INITDB_ROOT_PASSWORD=mongo
+      - MONGO_INITDB_DATABASE=ses
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "rs0" ]
+    mem_limit: 512M
+  # END MONGODB CLUSTER
+
+volumes:
+  mongodata:
+  mongodata2:
+  mongodata3:
