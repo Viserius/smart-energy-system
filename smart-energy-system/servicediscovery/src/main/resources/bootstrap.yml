@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: servicediscovery
+server:
+  port: 8761
+eureka:
+  client:
+    registerWithEureka: ${MULTIPLE_EUREKA_INSTANCES:false}
+    fetchRegistry: ${MULTIPLE_EUREKA_INSTANCES:false}
+    serviceUrl:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka/}
+  server:
+    eviction-interval-timer-in-ms: 1000 # Scheduler interval of how often to remove unavailable hosts
+    batch-replication: ${MULTIPLE_EUREKA_INSTANCES:false}
+  instance:
+    leaseRenewalIntervalInSeconds: 5 # Heartbeat Rate
+    leaseExpirationDurationInSeconds: 10 # Time after last heartbeat to consider host unavailable
+    hostname: ${POD_NAME:${HOSTNAME:localhost}}${POD_SERVICE:}
+logging.level.root: warn

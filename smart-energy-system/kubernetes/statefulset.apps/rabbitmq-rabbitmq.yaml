@@ -1,0 +1,193 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1beta2","kind":"StatefulSet","metadata":{"annotations":{},"labels":{"app.kubernetes.io/component":"rabbitmq-server","app.kubernetes.io/name":"rabbitmq"},"name":"rabbitmq-rabbitmq","namespace":"default","ownerReferences":[{"apiVersion":"app.k8s.io/v1beta1","blockOwnerDeletion":true,"kind":"Application","name":"rabbitmq","uid":"23a19598-f977-11e9-a465-42010a80005e"}]},"spec":{"replicas":3,"selector":{"matchLabels":{"app.kubernetes.io/component":"rabbitmq-server","app.kubernetes.io/name":"rabbitmq"}},"serviceName":"rabbitmq-rabbitmq-discovery","template":{"metadata":{"labels":{"app.kubernetes.io/component":"rabbitmq-server","app.kubernetes.io/name":"rabbitmq"}},"spec":{"containers":[{"env":[{"name":"MY_POD_NAME","valueFrom":{"fieldRef":{"fieldPath":"metadata.name"}}},{"name":"RABBITMQ_USE_LONGNAME","value":"true"},{"name":"RABBITMQ_NODENAME","value":"rabbit@$(MY_POD_NAME).rabbitmq-rabbitmq-discovery.default.svc.cluster.local"},{"name":"K8S_SERVICE_NAME","value":"rabbitmq-rabbitmq-discovery"},{"name":"K8S_HOSTNAME_SUFFIX","value":".rabbitmq-rabbitmq-discovery.default.svc.cluster.local"},{"name":"RABBITMQ_ERLANG_COOKIE","valueFrom":{"secretKeyRef":{"key":"rabbitmq-erlang-cookie","name":"rabbitmq-rabbitmq-secret"}}},{"name":"RABBITMQ_DEFAULT_USER","value":"guest"},{"name":"RABBITMQ_DEFAULT_PASS","valueFrom":{"secretKeyRef":{"key":"rabbitmq-pass","name":"rabbitmq-rabbitmq-secret"}}}],"image":"gcr.io/cloud-marketplace/google/rabbitmq@sha256:2f34801993bcde94aa1edd645755d01cb5af634ba53c9ea5a44202a35550ed3f","imagePullPolicy":"Always","lifecycle":{"postStart":{"exec":{"command":["/bin/bash","-c","# Wait for the RabbitMQ to be ready.\nuntil rabbitmqctl node_health_check; do\n  sleep 5\ndone\n\n# By default, RabbitMQ does not have Highly Available policies enabled,\n# using the following command to enable it.\nrabbitmqctl set_policy ha-all \".\" '{\"ha-mode\":\"all\", \"ha-sync-mode\":\"automatic\"}' --apply-to all --priority 0\n"]}}},"livenessProbe":{"exec":{"command":["rabbitmqctl","status"]},"initialDelaySeconds":60,"timeoutSeconds":30},"name":"rabbitmq","ports":[{"containerPort":25672,"name":"clitool"},{"containerPort":5672,"name":"client-access-2"},{"containerPort":5671,"name":"client-access-1"},{"containerPort":4369,"name":"epmd"},{"containerPort":15672,"name":"http"}],"readinessProbe":{"exec":{"command":["rabbitmqctl","status"]},"initialDelaySeconds":20,"timeoutSeconds":30},"volumeMounts":[{"mountPath":"/etc/rabbitmq","name":"config"},{"mountPath":"/var/lib/rabbitmq","name":"rabbitmq-rabbitmq-pvc"}]}],"initContainers":[{"command":["/bin/bash","-euc","# Remove cached erlang cookie since we are always providing it,\n# that opens the way to recreate the application and access to existing data\n# as a new erlang will be regenerated again.\nrm -f /var/lib/rabbitmq/.erlang.cookie\n\n# Copy the mounted configuration to both places.\ncp /rabbitmqconfig/rabbitmq.conf /etc/rabbitmq/rabbitmq.conf\ncp /rabbitmqconfig/enabled_plugins /etc/rabbitmq/enabled_plugins\n"],"image":"gcr.io/cloud-marketplace/google/rabbitmq/debian9@sha256:b7251aac422f8314b3a204ca13488f49673dc7764303c1c23dae332e6f46ca73","imagePullPolicy":"Always","name":"copy-rabbitmq-config","volumeMounts":[{"mountPath":"/rabbitmqconfig","name":"configmap"},{"mountPath":"/etc/rabbitmq","name":"config"},{"mountPath":"/var/lib/rabbitmq","name":"rabbitmq-rabbitmq-pvc"}]}],"serviceAccountName":"rabbitmq","terminationGracePeriodSeconds":180,"volumes":[{"configMap":{"items":[{"key":"rabbitmq.conf","path":"rabbitmq.conf"},{"key":"enabled_plugins","path":"enabled_plugins"}],"name":"rabbitmq-rabbitmq-config"},"name":"configmap"},{"emptyDir":{},"name":"config"}]}},"updateStrategy":{"type":"RollingUpdate"},"volumeClaimTemplates":[{"metadata":{"labels":{"app.kubernetes.io/component":"rabbitmq-server","app.kubernetes.io/name":"rabbitmq"},"name":"rabbitmq-rabbitmq-pvc"},"spec":{"accessModes":["ReadWriteOnce"],"resources":{"requests":{"storage":"5Gi"}},"storageClassName":"standard"}}]}}
+  creationTimestamp: null
+  generation: 1
+  labels:
+    app.kubernetes.io/component: rabbitmq-server
+    app.kubernetes.io/name: rabbitmq
+  name: rabbitmq-rabbitmq
+  ownerReferences:
+  - apiVersion: app.k8s.io/v1beta1
+    blockOwnerDeletion: true
+    kind: Application
+    name: rabbitmq
+    uid: 23a19598-f977-11e9-a465-42010a80005e
+  selfLink: /apis/apps/v1/namespaces/default/statefulsets/rabbitmq-rabbitmq
+spec:
+  podManagementPolicy: OrderedReady
+  replicas: 3
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: rabbitmq-server
+      app.kubernetes.io/name: rabbitmq
+  serviceName: rabbitmq-rabbitmq-discovery
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/component: rabbitmq-server
+        app.kubernetes.io/name: rabbitmq
+    spec:
+      containers:
+      - env:
+        - name: MY_POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: RABBITMQ_USE_LONGNAME
+          value: "true"
+        - name: RABBITMQ_NODENAME
+          value: rabbit@$(MY_POD_NAME).rabbitmq-rabbitmq-discovery.default.svc.cluster.local
+        - name: K8S_SERVICE_NAME
+          value: rabbitmq-rabbitmq-discovery
+        - name: K8S_HOSTNAME_SUFFIX
+          value: .rabbitmq-rabbitmq-discovery.default.svc.cluster.local
+        - name: RABBITMQ_ERLANG_COOKIE
+          valueFrom:
+            secretKeyRef:
+              key: rabbitmq-erlang-cookie
+              name: rabbitmq-rabbitmq-secret
+        - name: RABBITMQ_DEFAULT_USER
+          value: guest
+        - name: RABBITMQ_DEFAULT_PASS
+          valueFrom:
+            secretKeyRef:
+              key: rabbitmq-pass
+              name: rabbitmq-rabbitmq-secret
+        image: gcr.io/cloud-marketplace/google/rabbitmq@sha256:2f34801993bcde94aa1edd645755d01cb5af634ba53c9ea5a44202a35550ed3f
+        imagePullPolicy: Always
+        lifecycle:
+          postStart:
+            exec:
+              command:
+              - /bin/bash
+              - -c
+              - |
+                # Wait for the RabbitMQ to be ready.
+                until rabbitmqctl node_health_check; do
+                  sleep 5
+                done
+
+                # By default, RabbitMQ does not have Highly Available policies enabled,
+                # using the following command to enable it.
+                rabbitmqctl set_policy ha-all "." '{"ha-mode":"all", "ha-sync-mode":"automatic"}' --apply-to all --priority 0
+        livenessProbe:
+          exec:
+            command:
+            - rabbitmqctl
+            - status
+          failureThreshold: 3
+          initialDelaySeconds: 60
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 30
+        name: rabbitmq
+        ports:
+        - containerPort: 25672
+          name: clitool
+          protocol: TCP
+        - containerPort: 5672
+          name: client-access-2
+          protocol: TCP
+        - containerPort: 5671
+          name: client-access-1
+          protocol: TCP
+        - containerPort: 4369
+          name: epmd
+          protocol: TCP
+        - containerPort: 15672
+          name: http
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            - rabbitmqctl
+            - status
+          failureThreshold: 3
+          initialDelaySeconds: 20
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 30
+        resources:
+          requests:
+            cpu: 10m
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /etc/rabbitmq
+          name: config
+        - mountPath: /var/lib/rabbitmq
+          name: rabbitmq-rabbitmq-pvc
+      dnsPolicy: ClusterFirst
+      initContainers:
+      - command:
+        - /bin/bash
+        - -euc
+        - |
+          # Remove cached erlang cookie since we are always providing it,
+          # that opens the way to recreate the application and access to existing data
+          # as a new erlang will be regenerated again.
+          rm -f /var/lib/rabbitmq/.erlang.cookie
+
+          # Copy the mounted configuration to both places.
+          cp /rabbitmqconfig/rabbitmq.conf /etc/rabbitmq/rabbitmq.conf
+          cp /rabbitmqconfig/enabled_plugins /etc/rabbitmq/enabled_plugins
+        image: gcr.io/cloud-marketplace/google/rabbitmq/debian9@sha256:b7251aac422f8314b3a204ca13488f49673dc7764303c1c23dae332e6f46ca73
+        imagePullPolicy: Always
+        name: copy-rabbitmq-config
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /rabbitmqconfig
+          name: configmap
+        - mountPath: /etc/rabbitmq
+          name: config
+        - mountPath: /var/lib/rabbitmq
+          name: rabbitmq-rabbitmq-pvc
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      serviceAccount: rabbitmq
+      serviceAccountName: rabbitmq
+      terminationGracePeriodSeconds: 180
+      volumes:
+      - configMap:
+          defaultMode: 420
+          items:
+          - key: rabbitmq.conf
+            path: rabbitmq.conf
+          - key: enabled_plugins
+            path: enabled_plugins
+          name: rabbitmq-rabbitmq-config
+        name: configmap
+      - emptyDir: {}
+        name: config
+  updateStrategy:
+    type: RollingUpdate
+  volumeClaimTemplates:
+  - metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/component: rabbitmq-server
+        app.kubernetes.io/name: rabbitmq
+      name: rabbitmq-rabbitmq-pvc
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      dataSource: null
+      resources:
+        requests:
+          storage: 5Gi
+      storageClassName: standard
+      volumeMode: Filesystem
+    status:
+      phase: Pending
+status:
+  replicas: 0

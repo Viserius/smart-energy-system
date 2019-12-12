@@ -1,0 +1,18 @@
+spring:
+  application:
+    name: gateway
+  cloud:
+    config:
+      uri: configserver
+      discovery:
+        enabled: true
+server:
+  port: 80
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.uuid}}
+    hostname: ${POD_SERVICE:${HOSTNAME:localhost}}
+logging.level.root: warn

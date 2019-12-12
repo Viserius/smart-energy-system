@@ -1,0 +1,37 @@
+spring:
+  application:
+    name: powerinfrastructureservice
+  data:
+    cassandra:
+      contact-points: ${CASSANDRA_SEEDS:localhost}
+      port: 9042
+      schema-action: create_if_not_exists
+      keyspace-name: ses
+    mongodb:
+      uri: ${MONGO_URI:mongodb://localhost:27017/ses}
+  rabbitmq:
+    host: ${RABBITMQ_SEED:rabbitmq}
+    username: ${RABBITMQ_USERNAME:guest}
+    password: ${RABBITMQ_PASSWORD:guest}
+  cloud:
+    config:
+      enabled: false
+server:
+  port: 8083
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: ${EUREKA_URI:http://localhost:8761/eureka}
+  instance:
+    instance-id: ${spring.application.name}:${spring.application.instance_id:${random.uuid}}
+    hostname: ${POD_SERVICE:${HOSTNAME:localhost}}
+jsa:
+  rabbitmq:
+    queue_energy_activity: 'energy_activity'
+    exchange_single: 'device_history'
+    exchange_fanout: 'device_history_fanout'
+powerprocessing:
+  broadcast_interval_in_seconds: 5
+  minimum_energy_unit: 1E-7
+  percentage_allowed_for_trading: 0.5
+logging.level.root: warn

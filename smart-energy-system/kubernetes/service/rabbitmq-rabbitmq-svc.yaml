@@ -1,0 +1,47 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"labels":{"app.kubernetes.io/component":"rabbitmq-server","app.kubernetes.io/name":"rabbitmq"},"name":"rabbitmq-rabbitmq-svc","namespace":"default","ownerReferences":[{"apiVersion":"app.k8s.io/v1beta1","blockOwnerDeletion":true,"kind":"Application","name":"rabbitmq","uid":"23a19598-f977-11e9-a465-42010a80005e"}]},"spec":{"ports":[{"name":"client-access-2","port":5672},{"name":"client-access-1","port":5671},{"name":"clitool","port":25672},{"name":"epmd","port":4369},{"name":"http","port":15672}],"selector":{"app.kubernetes.io/component":"rabbitmq-server","app.kubernetes.io/name":"rabbitmq"},"type":"ClusterIP"}}
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/component: rabbitmq-server
+    app.kubernetes.io/name: rabbitmq
+  name: rabbitmq-rabbitmq-svc
+  ownerReferences:
+  - apiVersion: app.k8s.io/v1beta1
+    blockOwnerDeletion: true
+    kind: Application
+    name: rabbitmq
+    uid: 23a19598-f977-11e9-a465-42010a80005e
+  selfLink: /api/v1/namespaces/default/services/rabbitmq-rabbitmq-svc
+spec:
+  ports:
+  - name: client-access-2
+    port: 5672
+    protocol: TCP
+    targetPort: 5672
+  - name: client-access-1
+    port: 5671
+    protocol: TCP
+    targetPort: 5671
+  - name: clitool
+    port: 25672
+    protocol: TCP
+    targetPort: 25672
+  - name: epmd
+    port: 4369
+    protocol: TCP
+    targetPort: 4369
+  - name: http
+    port: 15672
+    protocol: TCP
+    targetPort: 15672
+  selector:
+    app.kubernetes.io/component: rabbitmq-server
+    app.kubernetes.io/name: rabbitmq
+  sessionAffinity: None
+  type: ClusterIP
+status:
+  loadBalancer: {}

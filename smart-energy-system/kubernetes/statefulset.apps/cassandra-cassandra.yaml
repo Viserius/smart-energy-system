@@ -1,0 +1,163 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"apps/v1","kind":"StatefulSet","metadata":{"annotations":{},"creationTimestamp":null,"generation":1,"labels":{"app.kubernetes.io/component":"cassandra-server","app.kubernetes.io/name":"cassandra"},"name":"cassandra-cassandra","namespace":"default","selfLink":"/apis/apps/v1/namespaces/default/statefulsets/cassandra-cassandra"},"spec":{"podManagementPolicy":"OrderedReady","replicas":3,"revisionHistoryLimit":10,"selector":{"matchLabels":{"app.kubernetes.io/component":"cassandra-server","app.kubernetes.io/name":"cassandra"}},"serviceName":"cassandra-cassandra-svc","template":{"metadata":{"creationTimestamp":null,"labels":{"app.kubernetes.io/component":"cassandra-server","app.kubernetes.io/name":"cassandra"}},"spec":{"containers":[{"env":[{"name":"CASSANDRA_CGROUP_MEMORY_LIMIT","value":"true"},{"name":"CASSANDRA_CLUSTER_NAME","value":"cassandra-cassandra-svc"},{"name":"CASSANDRA_PROMETHEUS_ENABLED","value":"true"},{"name":"CASSANDRA_SEEDS","value":"cassandra-cassandra-0.cassandra-cassandra-svc.default.svc.cluster.local, cassandra-cassandra-1.cassandra-cassandra-svc.default.svc.cluster.local, cassandra-cassandra-2.cassandra-cassandra-svc.default.svc.cluster.local"},{"name":"MAX_HEAP_SIZE","value":"512M"},{"name":"HEAP_NEWSIZE","value":"100M"}],"image":"marketplace.gcr.io/google/cassandra@sha256:9e2d48966c206320872f7fd88177dfc1eb1900b22d5a4d9ba10161622a94841b","imagePullPolicy":"Always","lifecycle":{"preStop":{"exec":{"command":["/bin/sh","-c","nodetool drain"]}}},"livenessProbe":{"exec":{"command":["/bin/sh","-c","nodetool status"]},"failureThreshold":3,"initialDelaySeconds":90,"periodSeconds":30,"successThreshold":1,"timeoutSeconds":1},"name":"cassandra","ports":[{"containerPort":7000,"name":"pure-intra","protocol":"TCP"},{"containerPort":7001,"name":"tls-intra","protocol":"TCP"},{"containerPort":7199,"name":"jmx","protocol":"TCP"},{"containerPort":9042,"name":"cql","protocol":"TCP"},{"containerPort":9160,"name":"thrift","protocol":"TCP"},{"containerPort":9404,"name":"prometheus","protocol":"TCP"}],"readinessProbe":{"exec":{"command":["/bin/sh","-c","nodetool status | grep -E \"^UN\\s+${POD_IP}\""]},"failureThreshold":3,"initialDelaySeconds":90,"periodSeconds":30,"successThreshold":1,"timeoutSeconds":1},"resources":{"limits":{"cpu":"500m","memory":"1Gi"},"requests":{"cpu":"10m","memory":"1Gi"}},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"File","volumeMounts":[{"mountPath":"/var/lib/cassandra","name":"cassandra-cassandra-pvc"}]},{"command":["/monitor","--stackdriver-prefix=custom.googleapis.com","--source=cassandra:http://localhost:9404/metrics","--pod-id=$(POD_NAME)","--namespace-id=$(POD_NAMESPACE)","--monitored-resource-types=k8s"],"env":[{"name":"POD_NAME","valueFrom":{"fieldRef":{"apiVersion":"v1","fieldPath":"metadata.name"}}},{"name":"POD_NAMESPACE","valueFrom":{"fieldRef":{"apiVersion":"v1","fieldPath":"metadata.namespace"}}}],"image":"marketplace.gcr.io/google/cassandra/prometheus-to-sd@sha256:8e3679a6e059d1806daae335ab08b304fd1d8d35cdff457baded7306b5af9ba5","imagePullPolicy":"IfNotPresent","name":"prometheus-to-sd","ports":[{"containerPort":6060,"name":"profiler","protocol":"TCP"}],"resources":{},"terminationMessagePath":"/dev/termination-log","terminationMessagePolicy":"File"}],"dnsPolicy":"ClusterFirst","restartPolicy":"Always","schedulerName":"default-scheduler","securityContext":{},"terminationGracePeriodSeconds":180}},"updateStrategy":{"type":"OnDelete"},"volumeClaimTemplates":[{"metadata":{"creationTimestamp":null,"labels":{"app.kubernetes.io/component":"cassandra-server","app.kubernetes.io/name":"cassandra"},"name":"cassandra-cassandra-pvc"},"spec":{"accessModes":["ReadWriteOnce"],"dataSource":null,"resources":{"requests":{"storage":"5Gi"}},"storageClassName":"standard","volumeMode":"Filesystem"},"status":{"phase":"Pending"}}]},"status":{"replicas":0}}
+  creationTimestamp: null
+  generation: 1
+  labels:
+    app.kubernetes.io/component: cassandra-server
+    app.kubernetes.io/name: cassandra
+  name: cassandra-cassandra
+  selfLink: /apis/apps/v1/namespaces/default/statefulsets/cassandra-cassandra
+spec:
+  podManagementPolicy: OrderedReady
+  replicas: 3
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: cassandra-server
+      app.kubernetes.io/name: cassandra
+  serviceName: cassandra-cassandra-svc
+  template:
+    metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/component: cassandra-server
+        app.kubernetes.io/name: cassandra
+    spec:
+      containers:
+      - env:
+        - name: CASSANDRA_CGROUP_MEMORY_LIMIT
+          value: "true"
+        - name: CASSANDRA_CLUSTER_NAME
+          value: cassandra-cassandra-svc
+        - name: CASSANDRA_PROMETHEUS_ENABLED
+          value: "true"
+        - name: CASSANDRA_SEEDS
+          value: cassandra-cassandra-0.cassandra-cassandra-svc.default.svc.cluster.local,
+            cassandra-cassandra-1.cassandra-cassandra-svc.default.svc.cluster.local,
+            cassandra-cassandra-2.cassandra-cassandra-svc.default.svc.cluster.local
+        - name: MAX_HEAP_SIZE
+          value: 512M
+        - name: HEAP_NEWSIZE
+          value: 100M
+        image: marketplace.gcr.io/google/cassandra@sha256:9e2d48966c206320872f7fd88177dfc1eb1900b22d5a4d9ba10161622a94841b
+        imagePullPolicy: Always
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - nodetool drain
+        livenessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - nodetool status
+          failureThreshold: 3
+          initialDelaySeconds: 90
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: cassandra
+        ports:
+        - containerPort: 7000
+          name: pure-intra
+          protocol: TCP
+        - containerPort: 7001
+          name: tls-intra
+          protocol: TCP
+        - containerPort: 7199
+          name: jmx
+          protocol: TCP
+        - containerPort: 9042
+          name: cql
+          protocol: TCP
+        - containerPort: 9160
+          name: thrift
+          protocol: TCP
+        - containerPort: 9404
+          name: prometheus
+          protocol: TCP
+        readinessProbe:
+          exec:
+            command:
+            - /bin/sh
+            - -c
+            - nodetool status | grep -E "^UN\s+${POD_IP}"
+          failureThreshold: 3
+          initialDelaySeconds: 90
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: 500m
+            memory: 1Gi
+          requests:
+            cpu: 10m
+            memory: 1Gi
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+        volumeMounts:
+        - mountPath: /var/lib/cassandra
+          name: cassandra-cassandra-pvc
+      - command:
+        - /monitor
+        - --stackdriver-prefix=custom.googleapis.com
+        - --source=cassandra:http://localhost:9404/metrics
+        - --pod-id=$(POD_NAME)
+        - --namespace-id=$(POD_NAMESPACE)
+        - --monitored-resource-types=k8s
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.name
+        - name: POD_NAMESPACE
+          valueFrom:
+            fieldRef:
+              apiVersion: v1
+              fieldPath: metadata.namespace
+        image: marketplace.gcr.io/google/cassandra/prometheus-to-sd@sha256:8e3679a6e059d1806daae335ab08b304fd1d8d35cdff457baded7306b5af9ba5
+        imagePullPolicy: IfNotPresent
+        name: prometheus-to-sd
+        ports:
+        - containerPort: 6060
+          name: profiler
+          protocol: TCP
+        resources: {}
+        terminationMessagePath: /dev/termination-log
+        terminationMessagePolicy: File
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext: {}
+      terminationGracePeriodSeconds: 180
+  updateStrategy:
+    type: OnDelete
+  volumeClaimTemplates:
+  - metadata:
+      creationTimestamp: null
+      labels:
+        app.kubernetes.io/component: cassandra-server
+        app.kubernetes.io/name: cassandra
+      name: cassandra-cassandra-pvc
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      dataSource: null
+      resources:
+        requests:
+          storage: 5Gi
+      storageClassName: standard
+      volumeMode: Filesystem
+    status:
+      phase: Pending
+status:
+  replicas: 0

@@ -1,0 +1,5 @@
+spring:
+  data:
+    cassandra:
+      port: 9142
+      keyspace-name: cassandra_unit_keyspace

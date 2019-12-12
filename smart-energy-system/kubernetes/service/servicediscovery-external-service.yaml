@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"v1","kind":"Service","metadata":{"annotations":{},"creationTimestamp":null,"labels":{"app.kubernetes.io/component":"servicediscovery-server","app.kubernetes.io/name":"servicediscovery"},"name":"servicediscovery-external-service","namespace":"default","selfLink":"/api/v1/namespaces/default/services/servicediscovery-external-service"},"spec":{"externalTrafficPolicy":"Cluster","ports":[{"nodePort":31548,"port":8761,"protocol":"TCP","targetPort":8761}],"selector":{"app.kubernetes.io/component":"servicediscovery-server","app.kubernetes.io/name":"servicediscovery"},"sessionAffinity":"ClientIP","sessionAffinityConfig":{"clientIP":{"timeoutSeconds":10800}},"type":"LoadBalancer"},"status":{"loadBalancer":{}}}
+  creationTimestamp: null
+  labels:
+    app.kubernetes.io/component: servicediscovery-server
+    app.kubernetes.io/name: servicediscovery
+  name: servicediscovery-external-service
+  selfLink: /api/v1/namespaces/default/services/servicediscovery-external-service
+spec:
+  externalTrafficPolicy: Cluster
+  ports:
+  - nodePort: 31548
+    port: 8761
+    protocol: TCP
+    targetPort: 8761
+  selector:
+    app.kubernetes.io/component: servicediscovery-server
+    app.kubernetes.io/name: servicediscovery
+  sessionAffinity: ClientIP
+  sessionAffinityConfig:
+    clientIP:
+      timeoutSeconds: 10800
+  type: LoadBalancer
+status:
+  loadBalancer: {}
